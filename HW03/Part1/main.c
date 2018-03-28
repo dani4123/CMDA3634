@@ -31,7 +31,13 @@ int main (int argc, char **argv) {
 
 
   /* Q1.2 alter so only Alice performs the ElGamal setup */
-  printf("Enter a number of bits: "); fflush(stdout);
+	
+  //declare storage for an ElGamal cryptosytem
+  unsigned int p, g, h, x;
+
+ 	if(rank == 0){
+
+  printf("Alice, please enter a number of bits: "); fflush(stdout);
   char status = scanf("%u",&n);
 
   //make sure the input makes sense
@@ -42,16 +48,21 @@ int main (int argc, char **argv) {
   printf("\n");
 
   
-  //declare storage for an ElGamal cryptosytem
-  unsigned int p, g, h, x;
+
+
 
   //setup an ElGamal cryptosystem
   setupElGamal(n,&p,&g,&h,&x);
 
 
   /* Q1.3 Share the public key information */
-  
+	MPI_Bcast(&p, 1, MPI_INT, 0, MPI_COMM_WORLD);  
 
+	MPI_Bcast(&g, 1, MPI_INT, 0, MPI_COMM_WORLD);  
+	MPI_Bcast(&h, 1, MPI_INT, 0, MPI_COMM_WORLD);  
+
+
+}
   //make an array of messages to send/recv
   unsigned int Nmessages = 5;
 
@@ -62,7 +73,8 @@ int main (int argc, char **argv) {
   //storage for extra encryption coefficient 
   unsigned int *a = 
       (unsigned int *) malloc(Nmessages*sizeof(unsigned int)); 
-
+	//2.3
+	if(rank == 1){//bob only
   //fill the messages with random elements of Z_p
   printf("Bob's original messages are:    [ ");
   for (unsigned int i=0;i<Nmessages;i++) {
@@ -81,9 +93,31 @@ int main (int argc, char **argv) {
 
   /* Q2.3 Have only Bob populate messages and then
     send all the encrypted mesages to Alice (rank 0) */
+	MPI_Send(message, 5, MPI_UNSIGNED, 0, 1, MPI_COMM_WORLD);
 
+	MPI_Send(message, 5, MPI_UNSIGNED, 0, 2, MPI_COMM_WORLD);
+
+
+
+
+}
   /* Q2.3 Have Alice recv all the encrypted mesages 
     from Bob (rank 1) and then decrypt them */
+	
+	//remember to double check/change
+	if(rank == 0){//alice only
+		MPI_Status aS;
+		MPI_Status mS;
+
+		
+	MPI_Recv(message, 5, MPI_UNSIGNED, 1, 1, MPI_COMM_WORLD, &mS);
+
+	MPI_Recv(a, 5, MPI_UNSIGNED, 1, 2, MPI_COMM_WORLD, &aS);
+
+
+
+
+
 
   printf("Alice's recieved messages are:  [ ");
   for (unsigned int i=0;i<Nmessages;i++) {
@@ -100,6 +134,7 @@ int main (int argc, char **argv) {
   printf("]\n");
   printf("\n");
 
+}//end if
   MPI_Finalize();
 
   return 0;
