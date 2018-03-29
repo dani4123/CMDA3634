@@ -25,6 +25,11 @@ int main (int argc, char **argv) {
 
   /* Q3.1 Make rank 0 setup the ELGamal system and
     broadcast the public key information */
+
+  //declare storage for an ElGamal cryptosytem
+  unsigned int p, g, h, x;
+
+	if(rank == 0){
   printf("Enter a number of bits: "); fflush(stdout);
   char status = scanf("%u",&n);
 
@@ -35,11 +40,16 @@ int main (int argc, char **argv) {
   }
   printf("\n");
 
-  //declare storage for an ElGamal cryptosytem
-  unsigned int p, g, h, x;
+
+
 
   //setup an ElGamal cryptosystem
   setupElGamal(n,&p,&g,&h,&x);
+}
+
+	MPI_Bcast(&p, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&g, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&h, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
 
 
@@ -52,15 +62,37 @@ int main (int argc, char **argv) {
      distributed amounst the MPI ranks  */
   unsigned int N = p-1; //total loop size
   unsigned int start, end;
-  
-  start = 0; 
-  end = start + N;
+	unsigned int newsize = N/size;
+	if(N%size ==0){
+  start = (newsize)*rank;
+  end = start + newsize;
+	}
+
+	else if(rank < size-1){
+		start = (newsize+1)*rank;
+		end = start + (newsize+1);
+	}
+
+	else if(rank == size-1){
+		
+		start = (newsize+1)*rank;
+		end =N;
+	}
+
+	double starttime;
+	double endtime;
+	starttime=MPI_Wtime();
 
   //loop through the values from 'start' to 'end'
   for (unsigned int i=start;i<end;i++) {
     if (modExp(g,i+1,p)==h)
       printf("Secret key found! x = %u \n", i+1);
   }
+
+	endtime=MPI_Wtime();
+	
+	printf("time for rank %d: %f.\n", rank, (endtime-starttime));
+	printf("throughput for rank %d: %f.\n", rank, (N-start)/(endtime-starttime));
 
   MPI_Finalize();
 
