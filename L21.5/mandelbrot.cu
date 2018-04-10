@@ -65,6 +65,11 @@ int testpoint(complex_t c){
 // Q2c: transform this function into a CUDA kernel
 __global__ void  mandelbrot(int Nre, int Nim, complex_t cmin, complex_t cmax, float *count){ 
   int n,m;
+  
+  int tx = threadIdx.x;
+  int ty = threadIdx.y
+  int bx = blockIdx.x;
+  int by = blockIdx.y;
 
   complex_t c;
 
@@ -93,10 +98,16 @@ int main(int argc, char **argv){
 
   // Q2b: set the number of threads per block and the number of blocks here:
  
-  int Bx = Nthreads;	
-
+  float *count;
+   
+  int Bx =round(sqrt(Nthreads));
+  int By =round(sqrt(Nthreads));
+  int Gx = (Nre+Nthreads-1)/Nthreads;	
+  int Gy = (Nim+Nthreads-1)/Nthreads;
+  dim3 B(Bx, By, 1);
+  dim3 G(Gx, Gy, 1);	
   // storage for the iteration counts
-  float *count; 
+
   cudaMalloc(&count, Nre*Nim*sizeof(float);
   
 
@@ -115,19 +126,15 @@ int main(int argc, char **argv){
   clock_t start = clock(); //start time in CPU cycles
 
   // compute mandelbrot set
-  mandelbrot(Nre, Nim, cmin, cmax, count); 
-  
+  mandelbrot <<G, B>> (Nre, Nim, cmin, cmax, count); 
+  cudaMemcpy(count,count, N*sizeof(float), cudaMemcpuDeviceToHost);
+
   clock_t end = clock(); //start time in CPU cycles
   
   // print elapsed time
   printf("elapsed = %f\n", ((double)(end-start))/CLOCKS_PER_SEC);
 
-  //arrays
-  float *f_a, *f_b, *f_c;
-  //allocate
-  cudaMalloc(&f_a,N*sizeof(float);
-  cudaMalloc(&f_b,N*sizeof(float);
-  cudaMalloc(&f_c,N*sizeof(float);
+  
   // output mandelbrot to png format image
   FILE *fp = fopen("mandelbrot.png", "w");
 
