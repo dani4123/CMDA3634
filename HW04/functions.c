@@ -201,6 +201,10 @@ void convertStringToZ(unsigned char *string, unsigned int Nchars,
                       unsigned int  *Z,      unsigned int Nints) {
 
   /* Q1.3 Complete this function   */
+	for(unsigned int i = 0; i<Nchars; i++)
+	{
+		Z[i] =string[i]-'0';
+	}
   /* Q2.2 Parallelize this function with OpenMP   */
 
 }
@@ -210,6 +214,10 @@ void convertZToString(unsigned int  *Z,      unsigned int Nints,
                       unsigned char *string, unsigned int Nchars) {
 
   /* Q1.4 Complete this function   */
+	for(unsigned int i = 0;i<Nints; i++)
+	{
+		string[i]= Z[i] + '0';
+	}
   /* Q2.2 Parallelize this function with OpenMP   */
 
 }
