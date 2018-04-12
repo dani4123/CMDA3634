@@ -99,7 +99,8 @@ int main(int argc, char **argv){
   // Q2b: set the number of threads per block and the number of blocks here:
  
   float *count;
-   
+  
+ 
   int Bx =round(sqrt(Nthreads));
   int By =round(sqrt(Nthreads));
   int Gx = (Nre+Nthreads-1)/Nthreads;	
