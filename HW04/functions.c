@@ -152,7 +152,7 @@ void ElGamalEncrypt(unsigned int *m, unsigned int *a, unsigned int Nints,
                     unsigned int p, unsigned int g, unsigned int h) {
 
   /* Q2.1 Parallelize this function with OpenMP   */
-
+#pragma omp parallel for
   for (unsigned int i=0; i<Nints;i++) {
     //pick y in Z_p randomly
     unsigned int y;
@@ -175,7 +175,9 @@ void ElGamalDecrypt(unsigned int *m, unsigned int *a, unsigned int Nints,
                     unsigned int p, unsigned int x) {
 
   /* Q2.1 Parallelize this function with OpenMP   */
-
+	#pragma omp parallel
+{
+	#pragma omp for
   for (unsigned int i=0; i<Nints;i++) {
     //compute s = a^x
     unsigned int s = modExp(a[i],x,p);
@@ -185,7 +187,9 @@ void ElGamalDecrypt(unsigned int *m, unsigned int *a, unsigned int Nints,
     
     //decrypt message by multplying by invS
     m[i] = modprod(m[i],invS,p);
-  }
+ 
+}
+ }
 }
 
 //Pad the end of string so its length is divisible by Nchars
@@ -194,6 +198,10 @@ void padString(unsigned char* string, unsigned int charsPerInt) {
 
   /* Q1.2 Complete this function   */
 
+	while((strlen(string)) % charsPerInt !=0)
+	{
+		string[strlen(string)]= ' ';//make a space
+	}
 }
 
 
@@ -201,11 +209,17 @@ void convertStringToZ(unsigned char *string, unsigned int Nchars,
                       unsigned int  *Z,      unsigned int Nints) {
 
   /* Q1.3 Complete this function   */
-	for(unsigned int i = 0; i<Nchars; i++)
-	{
-		Z[i] =string[i]-'0';
-	}
   /* Q2.2 Parallelize this function with OpenMP   */
+	#pragma omp parallel for
+	for(unsigned int i = 0; i<Nints; i++)
+	{
+		for(unsigned int x = 0; x<(Nchars/Nints);x++)
+		{
+			Z[i] = (Z[i]*256) + string[(i*(Nchars/Nints))+x];
+		}
+		//Z[i] =string[i]-'0';
+	}
+
 
 }
 
@@ -214,11 +228,17 @@ void convertZToString(unsigned int  *Z,      unsigned int Nints,
                       unsigned char *string, unsigned int Nchars) {
 
   /* Q1.4 Complete this function   */
+  /* Q2.2 Parallelize this function with OpenMP   */
+	#pragma omp parallel for
 	for(unsigned int i = 0;i<Nints; i++)
 	{
-		string[i]= Z[i] + '0';
+		for(unsigned int x = (Nchars/Nints)-1; x>=0; x--)
+		{
+			string[(i*(Nchars/Nints))+x] = Z[i] % 256;
+			Z[i] = Z[i]/256;
+		}
 	}
-  /* Q2.2 Parallelize this function with OpenMP   */
+
 
 }
 
